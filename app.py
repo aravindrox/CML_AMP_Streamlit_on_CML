@@ -1,79 +1,76 @@
-# ###########################################################################
-#
-#  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2021
-#  All rights reserved.
-#
-#  Applicable Open Source License: Apache 2.0
-#
-#  NOTE: Cloudera open source products are modular software products
-#  made up of hundreds of individual components, each of which was
-#  individually copyrighted.  Each Cloudera open source product is a
-#  collective work under U.S. Copyright Law. Your license to use the
-#  collective work is as provided in your written agreement with
-#  Cloudera.  Used apart from the collective work, this file is
-#  licensed for your use pursuant to the open source license
-#  identified above.
-#
-#  This code is provided to you pursuant a written agreement with
-#  (i) Cloudera, Inc. or (ii) a third-party authorized to distribute
-#  this code. If you do not have a written agreement with Cloudera nor
-#  with an authorized and properly licensed third party, you do not
-#  have any rights to access nor to use this code.
-#
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
-#  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
-#  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
-#  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
-#  IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND
-#  FITNESS FOR A PARTICULAR PURPOSE; (C) CLOUDERA IS NOT LIABLE TO YOU,
-#  AND WILL NOT DEFEND, INDEMNIFY, NOR HOLD YOU HARMLESS FOR ANY CLAIMS
-#  ARISING FROM OR RELATED TO THE CODE; AND (D)WITH RESPECT TO YOUR EXERCISE
-#  OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
-#  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR
-#  CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO, DAMAGES
-#  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
-#  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
-#  DATA.
-#
-# ###########################################################################
-
-import seaborn as sns
 import streamlit as st
-
-st.title("Old Faithful eruptions")
-
-geyser = sns.load_dataset("geyser")
-
-st.markdown(
-    """
-    This is a tiny app to explore the
-    [Old Faithful Geyser Data](https://www.stat.cmu.edu/~larry/all-of-statistics/=data/faithful.dat).
-    First, we can view some summary statistics.
-    The `duration` variable is the duration of an eruption in minutes,
-    and the `waiting` variable is the time between eruptions in minutes.
-    """
-)
-
-st.write(geyser.describe().T)
+from dotenv import load_dotenv
+from openai import OpenAI
+import base64
+import os
+from PIL import Image
 
 
-"""
-So the mean waiting time between eruptions is around 70 minutes,
-with a mean eruption duration of three and a half minutes.
-Summary statistics can be misleading.
-Let us plot the waiting and duration variables against each other.
+# client = OpenAI()
+def llmcall(query,base64_encoded_data):
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    client = OpenAI(api_key=api_key)
 
-We'll use a joint density plot, with the marginal densities for each
-variable on the corresponding axis.
-There are clearly two clusters:
-shorter eruptions with a shorter waiting time,
-and longer eruptions with a longer waiting time.
-These are labeled in our data set, so we separate the data and color by cluster.
-"""
+    # cwd = os.getcwd()
+    # image_path =  cwd+"/src/pdfcon1/data/image.png"
+    # image_path =  "/Users/XXXXX/pdfcon1/src/pdfcon1/data/image.png"
+    # base64_image = encode_image(image_path)
+    # base64_image = base64.b64encode(image_file).decode('utf-8')
 
+    response = client.chat.completions.create(
+        model='gpt-4o',
+        messages=[
+            {
+                'role': 'user',
+                'content': [
+                    {
+                        'type': 'text',
+                        # 'text': 'how many stamps and logos are available'
+                        'text': query
+                    },
+                    {
+                    'type': 'image_url',
+                    'image_url': 
+                    {
+                        #    'url': 'https://site/image.jpg',
+                        'url': f'data:image/png;base64,{base64_encoded_data}',
+                    },
 
-with sns.axes_style("white"):
-    st.pyplot(
-        sns.jointplot(data=geyser, x="waiting", y="duration", hue="kind", kind="kde")
+                    },
+                ],
+            }
+        ],
+        max_tokens=300
     )
+    return response
+# print(response.choices[0].message)
+
+def encode_image(image_path):
+    '''Encodes am image to base 64 string'''
+    with open(image_path,"rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
+
+def load_image(image_file):
+    img = Image.open(image_file)
+    return img
+
+st.title("Line of Credit")
+image_file = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"])
+if image_file is not None:
+    file_details = {"file_name":image_file.name,"file_type":image_file.type,"file_size":image_file.size}
+    st.write(file_details)
+    # st.image(load_image(image_file))
+    bytes_data = image_file.read()
+    base64_encoded_data = base64.b64encode(bytes_data).decode('utf-8')
+    st.text_area("Base64 Encoded Data", value=base64_encoded_data, height=300)
+    # st.text_area("Base64 Encoded Data path", value=encode_image("/Users/aswarna/pdfcon1/src/pdfcon1/data/image.png"), height=300)
+    st.image(load_image(image_file))
+query = st.text_input("Query regarding the image",placeholder="How many stamps are present")
+    # st.write(llmcall())
+if st.button("Enter"):
+    llm_response = llmcall(query,base64_encoded_data)
+    st.write(llm_response.choices[0].message.content)
+    st.write("completion tokens: ", llm_response.usage.completion_tokens)
+    st.write("Prompt tokens: ", llm_response.usage.prompt_tokens)
+    st.write("total token: ", llm_response.usage.total_tokens)
