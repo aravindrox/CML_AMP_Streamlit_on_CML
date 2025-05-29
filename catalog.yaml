@@ -1,0 +1,17 @@
+name: Cloudera
+
+entries:
+  - title: LOC
+    label: LOC
+    short_description: A demonstration of how CML can host LLM models using Streamlit
+    long_description: >-
+      The goal of this application is to demonstrate how the a Open Source LLM model can be deployed on CML. The application is built using OpenAI
+    image_path: >-
+      https://github.com/aravindrox/CML_AMP_Streamlit_on_CML/blob/master/docs/images/streamlit-logo.png
+    tags:
+      - ProServe
+      - OpenAI
+      - Streamlit
+      - LOC
+    git_url: "https://github.com/aravindrox/CML_AMP_Streamlit_on_CML.git"
+    is_prototype: true
