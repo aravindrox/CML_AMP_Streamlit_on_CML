@@ -4,3 +4,6 @@ streamlit==1.10.0
 pandas<2 #need to pin pandas version for seaborn
 dotenv
 openai
+pytesseract
+numpy
+cv2-python
