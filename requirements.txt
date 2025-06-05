@@ -6,4 +6,4 @@ dotenv
 openai
 pytesseract
 numpy
-cv2-python
+opencv-python
